@@ -163,61 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Create slot card element
-  let slotCard = null;
-  function showSlotCard() {
-    if (slotCard) return;
-    slotCard = document.createElement('div');
-    slotCard.style.position = 'fixed';
-    slotCard.style.left = '24px';
-    slotCard.style.bottom = '24px';
-    slotCard.style.width = '420px';
-    slotCard.style.height = '231px';
-    slotCard.style.background = 'rgba(34,34,40,0.97)';
-    slotCard.style.borderRadius = '42px';
-    slotCard.style.boxShadow = '0 17px 67px 0 rgba(0,0,0,0.28)';
-    slotCard.style.display = 'flex';
-    slotCard.style.alignItems = 'center';
-    slotCard.style.justifyContent = 'center';
-    slotCard.style.zIndex = '1000';
-    slotCard.style.padding = '25px';
-
-    const img = document.createElement('img');
-    img.src = slotImageUrl || 'https://via.placeholder.com/378x165?text=Slot';
-    img.alt = 'Slot';
-    img.style.maxWidth = '100%';
-    img.style.maxHeight = '100%';
-    img.style.borderRadius = '29px';
-    img.style.boxShadow = '0 4px 17px 0 rgba(0,0,0,0.18)';
-    slotCard.appendChild(img);
-
-    document.body.appendChild(slotCard);
-  }
-
-  function hideSlotCard() {
-    if (slotCard) {
-      slotCard.remove();
-      slotCard = null;
-    }
-  }
-
-  function handleBonusOpen() {
-    const cardVisible = !!slotCard;
-    document.querySelectorAll('.sidebar-btn').forEach(btn => btn.classList.remove('active'));
-    if (cardVisible) {
-      hideSlotCard();
-      if (bhPanel) bhPanel.style.display = 'flex';
-      // No button should be active now
-    } else {
-      if (bhPanel) bhPanel.style.display = 'none';
-      showSlotCard();
-      if (boBtn) boBtn.classList.add('active');
-    }
-    updateInfoPanelVisibility();
-  }
-
-  if (boBtn) boBtn.addEventListener('click', handleBonusOpen);
-
   // Patch Bonus Opening button in BH panel
   if (bonusOpenBtn) {
     bonusOpenBtn.addEventListener('click', () => {
@@ -227,6 +172,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (boBtn) boBtn.classList.add('active');
       if (bhBtn) bhBtn.classList.remove('active');
       updateInfoPanelVisibility();
+      // --- Ensure slot highlight card updates immediately ---
+      setTimeout(updateSlotHighlightCard, 50);
     });
   }
 
@@ -777,4 +724,183 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     updateNavbarImage();
   }
+
+  // --- Slot Highlight Card (Bottom Left) ---
+  let slotHighlightCard = null;
+  function updateSlotHighlightCard() {
+    // Only show if BO is active
+    const boBtn = document.getElementById('bo-btn');
+    if (!boBtn || !boBtn.classList.contains('active')) {
+      if (slotHighlightCard) {
+        slotHighlightCard.remove();
+        slotHighlightCard = null;
+      }
+      return;
+    }
+
+    // Remove old card if present
+    if (slotHighlightCard) {
+      slotHighlightCard.remove();
+      slotHighlightCard = null;
+    }
+
+    // Get bonus list data (with payouts)
+    const bonusListUl = document.querySelector('.bonus-list ul');
+    if (!bonusListUl) return;
+    const bonuses = Array.from(bonusListUl.children)
+      .filter(li => !li.classList.contains('carousel-clone'))
+      .map(li => {
+        const spans = li.querySelectorAll('span');
+        return {
+          name: spans[0] ? spans[0].textContent : '',
+          bet: spans[1] ? parseFloat(spans[1].textContent.replace(/[^\d.]/g, '')) : 0,
+          payout: li.dataset && li.dataset.payout ? parseFloat(li.dataset.payout) : null,
+          img: li.querySelector('img') ? li.querySelector('img').src : 'https://via.placeholder.com/32x32?text=🎰'
+        };
+      });
+
+    if (!bonuses.length) return;
+
+    // Find best (highest payout), worst (lowest payout), and current (first with payout==null)
+    let best = null, worst = null, current = null;
+    const bonusesWithPayout = bonuses.filter(b => typeof b.payout === 'number' && !isNaN(b.payout));
+    if (bonusesWithPayout.length) {
+      best = bonusesWithPayout.reduce((a, b) => (b.payout > a.payout ? b : a), bonusesWithPayout[0]);
+      worst = bonusesWithPayout.reduce((a, b) => (b.payout < a.payout ? b : a), bonusesWithPayout[0]);
+    }
+    current = bonuses.find(b => b.payout === null || isNaN(b.payout));
+
+    // Always show 3 slots: left=best, middle=current, right=worst (even if some are the same)
+    const slotsToShow = [
+      best ? { ...best, type: 'best' } : null,
+      current ? { ...current, type: 'current' } : null,
+      worst ? { ...worst, type: 'worst' } : null
+    ];
+
+    // If all are null, don't show
+    if (!slotsToShow[0] && !slotsToShow[1] && !slotsToShow[2]) return;
+
+    // Card container
+    slotHighlightCard = document.createElement('div');
+    slotHighlightCard.style.position = 'fixed';
+    slotHighlightCard.style.left = '24px';
+    slotHighlightCard.style.bottom = '24px';
+    slotHighlightCard.style.width = '420px';
+    slotHighlightCard.style.height = '161px'; // 140px * 1.15 = 161px
+    slotHighlightCard.style.background = 'rgba(34,34,40,0.97)';
+    slotHighlightCard.style.borderRadius = '32px';
+    slotHighlightCard.style.boxShadow = '0 17px 67px 0 rgba(0,0,0,0.28)';
+    slotHighlightCard.style.display = 'flex';
+    slotHighlightCard.style.alignItems = 'center';
+    slotHighlightCard.style.justifyContent = 'space-between';
+    slotHighlightCard.style.zIndex = '1000';
+    slotHighlightCard.style.padding = '18px 32px 18px 32px';
+    slotHighlightCard.style.gap = '0px';
+
+    // Border colors
+    const borderColors = {
+      best: '#00ff00',
+      current: '#ffe600',
+      worst: '#ff3b3b'
+    };
+
+    // Helper to render a slot card (empty if slot is null)
+    function renderSlot(slot, labelText, borderColor) {
+      const card = document.createElement('div');
+      card.style.border = `3px solid ${borderColor}`;
+      card.style.borderRadius = '16px';
+      card.style.padding = '12px 16px';
+      card.style.background = '#23242a';
+      card.style.display = 'flex';
+      card.style.flexDirection = 'column';
+      card.style.alignItems = 'center';
+      card.style.minWidth = '110px';
+      card.style.maxWidth = '120px';
+      card.style.boxSizing = 'border-box';
+      card.style.height = '100%';
+
+      if (!slot) {
+        // Empty placeholder
+        card.style.opacity = '0.25';
+        card.innerHTML = `<div style="width:48px;height:48px;border-radius:8px;background:#444;margin-bottom:8px;"></div>
+          <div style="color:#fff;font-weight:600;font-size:14px;text-align:center;margin-bottom:4px;">---</div>
+          <div style="color:${borderColor};font-size:12px;font-weight:bold;">${labelText}</div>`;
+        return card;
+      }
+
+      const img = document.createElement('img');
+      img.src = slot.img;
+      img.alt = slot.name;
+      img.style.width = '48px';
+      img.style.height = '48px';
+      img.style.objectFit = 'cover';
+      img.style.borderRadius = '8px';
+      img.style.marginBottom = '8px';
+      card.appendChild(img);
+
+      const nameDiv = document.createElement('div');
+      nameDiv.textContent = slot.name;
+      nameDiv.style.color = '#fff';
+      nameDiv.style.fontWeight = '600';
+      nameDiv.style.fontSize = '14px';
+      nameDiv.style.textAlign = 'center';
+      nameDiv.style.marginBottom = '4px';
+      card.appendChild(nameDiv);
+
+      const label = document.createElement('div');
+      label.textContent = labelText;
+      label.style.color = borderColor;
+      label.style.fontSize = '12px';
+      label.style.fontWeight = 'bold';
+      card.appendChild(label);
+
+      if (typeof slot.payout === 'number' && !isNaN(slot.payout)) {
+        const payoutDiv = document.createElement('div');
+        payoutDiv.textContent = `Payout: €${slot.payout.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+        payoutDiv.style.color = '#aaa';
+        payoutDiv.style.fontSize = '12px';
+        payoutDiv.style.marginTop = '2px';
+        card.appendChild(payoutDiv);
+      }
+
+      return card;
+    }
+
+    // Render left (best), middle (current), right (worst)
+    slotHighlightCard.appendChild(renderSlot(slotsToShow[0], 'Best', borderColors.best));
+    slotHighlightCard.appendChild(renderSlot(slotsToShow[1], 'Current', borderColors.current));
+    slotHighlightCard.appendChild(renderSlot(slotsToShow[2], 'Worst', borderColors.worst));
+
+    document.body.appendChild(slotHighlightCard);
+  }
+
+  // Call updateSlotHighlightCard whenever the bonus list or payouts change
+  function patchSlotHighlightCardUpdates() {
+    // After adding a bonus
+    if (betSizeInput && slotNameInput && bonusListUl) {
+      betSizeInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          setTimeout(updateSlotHighlightCard, 50);
+        }
+      });
+    }
+    // After payout is set
+    const origSetBonusPayout = setBonusPayout;
+    setBonusPayout = function(slotName, payout) {
+      origSetBonusPayout(slotName, payout);
+      setTimeout(updateSlotHighlightCard, 50);
+    };
+    // On page load
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(updateSlotHighlightCard, 100);
+    });
+    // Also update when BO button is toggled
+    const boBtn = document.getElementById('bo-btn');
+    if (boBtn) {
+      boBtn.addEventListener('click', () => {
+        setTimeout(updateSlotHighlightCard, 50);
+      });
+    }
+  }
+  patchSlotHighlightCardUpdates();
 });

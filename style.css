@@ -4,7 +4,7 @@ body {
   /* Soft blue/gray gradient with subtle vignette */
   background: 
     radial-gradient(ellipse at 70% 100%, rgba(180,200,220,0.45) 0%, rgba(24,26,32,0.10) 80%),
-    linear-gradient(120deg, #c7d7e6 0%, #e3ecf3 60%, #b5c7d3 100%);
+    linear-gradient(120deg, #ecf4fc 0%, #e3ecf3 60%, #b5c7d3 100%);
   color: #f3f4f6;
   min-height: 100vh;
 }
