@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Streamer Overlay Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <div class="overlay-container">
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+      <div class="navbar-left">
+        <img src="https://static.twitchcdn.net/assets/favicon-32-e29e246c157142c94346.png" alt="Logo" class="navbar-logo"/>
+        <span id="twitch-username" class="streamer-name" style="display:none;"></span>
+        <button id="twitch-login-btn" class="twitch-link" type="button">Login with Twitch</button>
+        <!-- Image Switcher Start (right after login button) -->
+        <a id="navbar-image-link" href="#" target="_blank" style="display:inline-block;">
+          <img id="navbar-image-switcher" src="https://static.twitchcdn.net/assets/favicon-32-e29e246c157142c94346.png" alt="Switcher" class="navbar-switcher-img"/>
+        </a>
+        <!-- Image Switcher End -->
+      </div>
+      <div class="navbar-center">
+        <span id="current-time" class="current-time"></span>
+      </div>
+      <div class="navbar-right">
+        <a href="https://www.begambleaware.org/" target="_blank" class="aware-link">Be Gamble Aware</a>
+        <!-- Image switcher removed from here -->
+      </div>
+    </nav>
+
+    <!-- Main Content Layout -->
+    <div class="main-layout">
+      <!-- Left Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-ad">
+          <label for="ad-image-input" class="ad-upload-label">+</label>
+          <input type="file" id="ad-image-input" accept="image/*" style="display:none;">
+          <img id="ad-image-preview" class="ad-image-preview" style="display:none;" alt="Ad"/>
+        </div>
+        <button class="sidebar-btn" id="bh-btn">
+          <span class="sidebar-icon">🎰</span>
+          <span>BH</span>
+        </button>
+        <button class="sidebar-btn" id="bo-btn">
+          <span class="sidebar-icon">🎁</span>
+          <span>BO</span>
+        </button>
+        <button class="sidebar-btn">
+          <span class="sidebar-icon">🏆</span>
+          <span>VS</span>
+        </button>
+      </aside>
+
+      <!-- Middle Panel (hidden by default, shown when BH is clicked) -->
+      <section class="middle-panel" id="middle-panel" style="display:none;">
+        <div class="middle-panel-title">BH Panel</div>
+        <div class="middle-panel-row">
+          <label class="middle-input-label left">
+            Start Money
+            <input type="number" id="start-money-input" class="middle-input" placeholder="Start Money" min="0" step="any" />
+          </label>
+          <label class="middle-input-label right">
+            Stop Money
+            <input type="number" id="stop-money-input" class="middle-input" placeholder="Stop Money" min="0" step="any" />
+          </label>
+        </div>
+        <div class="middle-panel-row">
+          <label class="middle-input-label left">
+            Slot Name
+            <input type="text" id="slot-name-input" class="middle-input" placeholder="Slot Name" />
+          </label>
+          <label class="middle-input-label right">
+            Bet Size
+            <input type="number" id="bet-size-input" class="middle-input" placeholder="Enter bet size" min="0" step="any" />
+          </label>
+        </div>
+        <div class="middle-panel-actions">
+          <div class="middle-checkbox-row">
+            <label class="middle-checkbox">
+              <input type="checkbox" id="super-checkbox" />
+              <span>Super</span>
+            </label>
+          </div>
+          <div class="middle-actions-row">
+            <button class="middle-btn small-btn" id="slot-img-url-btn" type="button">
+              <span class="middle-icon">🖼️</span>
+              <span>Slot Image</span>
+            </button>
+            <input type="url" id="slot-img-url-input" class="middle-input slot-img-url-input" placeholder="Paste image URL" style="display:none; width:180px; margin-right:1rem;" />
+            <button class="middle-btn small-btn" id="edit-slots-btn">
+              <span class="middle-icon">✏️</span>
+              <span>Edit Slots</span>
+            </button>
+            <button class="middle-btn small-btn" id="bonus-opening-btn">
+              <span class="middle-icon">▶️</span>
+              <span>Bonus Opening</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Main Content Placeholder -->
+      <main class="main-content">
+        <!-- Add your main overlay content here -->
+      </main>
+
+      <!-- Right Info Panel -->
+      <aside class="info-panel">
+        <div class="money-row-main">
+          <div class="money-display start-money">
+            <span class="money-label">Start</span>
+            <span class="money-value" id="start-money-display-main">--</span>
+          </div>
+          <div class="money-display stop-money">
+            <span class="money-label">Stop</span>
+            <span class="money-value" id="stop-money-display-main">--</span>
+          </div>
+        </div>
+        <!-- Bonus Hunt Results Section -->
+        <div class="info-section bonus-hunt-results" id="bonus-hunt-results" style="margin-bottom:1rem;">
+          <!-- Results will be injected here by JS -->
+        </div>
+        <div class="info-section bonus-list">
+          <h4>Bonus List</h4>
+          <ul></ul> <!-- Infinite carousel will be applied to this list -->
+        </div>
+        <!-- Twitch Chat Embed at the bottom of the right sidebar -->
+        <div class="info-twitch-chat">
+          <iframe
+            src="https://www.twitch.tv/embed/osecaadegas95/chat?parent=localhost"
+            frameborder="0"
+            scrolling="no"
+            allowfullscreen
+            height="300"
+            width="100%"
+            style="border-radius: 10px; background: #181a20;"
+            title="Twitch Chat"
+          ></iframe>
+        </div>
+        <div class="info-section discord">
+          <a href="https://osecaadegas.github.io/95/" target="_blank" rel="noopener" class="discord-btn">Visit our Website</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>
+</html>
